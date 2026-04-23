@@ -1,4 +1,4 @@
-name: Build APK
+name: Android APK Build
 
 on:
   push:
@@ -10,22 +10,42 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Repo checkout
+    # Repo çek
+    - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Java kur
+    # Java kur (Android için gerekli)
+    - name: Setup Java
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Gradle cache
+    # Android SDK kur
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    # Gradle cache (build hızlanır)
+    - name: Setup Gradle cache
       uses: gradle/gradle-build-action@v3
 
-    - name: Gradle build (APK)
-      run: ./gradlew assembleDebug
+    # gradlew permission fix (HATA ÇÖZÜMÜ)
+    - name: Make gradlew executable
+      run: chmod +x gradlew
 
-    - name: APK upload
+    # (Opsiyonel ama güvenli) CRLF fix
+    - name: Fix line endings
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y dos2unix
+        dos2unix gradlew
+
+    # APK build
+    - name: Build Debug APK
+      run: ./gradlew assembleDebug --no-daemon
+
+    # APK upload
+    - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: app-debug-apk
